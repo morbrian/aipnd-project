@@ -79,7 +79,7 @@ All of these steps are performed from the WSL Ubuntu commandline.
 6. System Ready!
 
 
-## Extracting cat and dog data:
+## Extracting data without macos metadata:
 
 ```
 unzip Cat_Dog_data.zip -x '__MACOSX/*'
