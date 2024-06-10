@@ -1,10 +1,11 @@
 from model_construction import construct_model_from_parameters, produce_optimizer, produce_criterion, save_model
 from feature_loading import produce_data_loaders, get_category_to_name_map
 from model_training import train_model
+import argparse
 
 ''' train.py commandline program
     Basic Usage: 
-    python train.py data_dur --save_dir save_directory
+    python train.py data_dir --save_dir save_directory
 
     Choose Architecture:
     python train.py data_dir --arch "vgg16"
@@ -14,14 +15,10 @@ from model_training import train_model
 
     GPU will be used automatically if available.
 '''
-import argparse
-
-
-
 def main():
     # Create Parse using ArgumentParser
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', type=str, default='./flowers', help='data folder organized by train, valid, test subfolders')
+    parser.add_argument('data_dir', type=str, default='./flowers', help='data folder organized by train, valid, test subfolders')
     parser.add_argument('--cat_to_name', type=str, default='./cat_to_name.json', help='path to json file with category to name mappings')
     parser.add_argument('--save_dir', type=str, default=None, help='path to folder where our checkpoint files is saved')
     parser.add_argument('--arch', type=str, default='vgg16', choices=['vgg16', 'vgg19'], help='CNN model architecture to use')

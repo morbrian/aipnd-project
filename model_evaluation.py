@@ -1,7 +1,7 @@
 import torch
-import numpy as np
 from PIL import Image
 import time
+from feature_loading import process_image
 
 # print out metrics bundle content
 def print_metrics_record(metrics_record, include=None, separator='.. '):
@@ -61,38 +61,6 @@ def check_accuracy(model, criterion, dataloader, metrics_record={}, device_name=
     metrics_record[f"accuracy"] = accuracy/len(dataloader)
 
 
-def process_image(image, short_size=256, img_crop_size=224):
-    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
-        returns an Numpy array
-    '''
-    shorter_side = image.height if image.height < image.width else image.width
-    scaling = shorter_side // short_size
-    new_height = image.height * scaling
-    new_width = image.width * scaling
-
-    im_resized = image.resize((new_width, new_height))
-    edge_dist = img_crop_size // 2
-    center_x = new_width // 2
-    center_y = new_height // 2
-    upper = center_y - edge_dist
-    left = center_x - edge_dist 
-    lower = center_y + edge_dist
-    right = center_x + edge_dist
-    im_cropped = im_resized.crop([left, upper, right, lower])
-
-    # comment out dimension logging
-    # print(f"cropped image dims: h({im_cropped.height}) w({im_cropped.width})")
-
-    im = np.array(im_cropped) / 255.0
-    im = (im - pixel_mean) / pixel_std
-    im = im.transpose((2, 0, 1))
-
-    # comment out dimnsion logging
-    # print(f"numpy image array shape: {im.shape}")
-
-    return im
-
-
 def predict(image_path, model, category_names, device_name=None, topk=5):
     ''' Predict the class (or classes) of an image using a trained deep learning model.
         Return a ziped list of the topk picks: (category_index, category_name, probability)
@@ -104,6 +72,7 @@ def predict(image_path, model, category_names, device_name=None, topk=5):
     if not device_name:
         device_name = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device_name)
+    print(f"Device: {device_name}")
 
     torch_image = torch.from_numpy(processed_image).float().unsqueeze(0)
     torch_image = torch_image.to(device)

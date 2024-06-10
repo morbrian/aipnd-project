@@ -1,5 +1,6 @@
 import torch
 from torchvision import datasets, transforms
+import numpy as np
 import json
 
 # pixel color normalize stats per ImageNet dataset specification, same values for train and test.
@@ -59,3 +60,35 @@ def get_category_to_name_map(filepath):
     with open(filepath, 'r') as f:
         cat_to_name = json.load(f)
     return cat_to_name
+
+
+def process_image(image, short_size=256, img_crop_size=224, pixel_mean=pixel_mean, pixel_std=pixel_std):
+    ''' Scales, crops, and normalizes a PIL image for a PyTorch model,
+        returns an Numpy array
+    '''
+    shorter_side = image.height if image.height < image.width else image.width
+    scaling = shorter_side // short_size
+    new_height = image.height * scaling
+    new_width = image.width * scaling
+
+    im_resized = image.resize((new_width, new_height))
+    edge_dist = img_crop_size // 2
+    center_x = new_width // 2
+    center_y = new_height // 2
+    upper = center_y - edge_dist
+    left = center_x - edge_dist 
+    lower = center_y + edge_dist
+    right = center_x + edge_dist
+    im_cropped = im_resized.crop([left, upper, right, lower])
+
+    # comment out dimension logging
+    # print(f"cropped image dims: h({im_cropped.height}) w({im_cropped.width})")
+
+    im = np.array(im_cropped) / 255.0
+    im = (im - pixel_mean) / pixel_std
+    im = im.transpose((2, 0, 1))
+
+    # comment out dimnsion logging
+    # print(f"numpy image array shape: {im.shape}")
+
+    return im
