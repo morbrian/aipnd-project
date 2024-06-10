@@ -2,6 +2,7 @@ from model_construction import construct_model_from_parameters, produce_optimize
 from feature_loading import produce_data_loaders, get_category_to_name_map
 from model_training import train_model
 import argparse
+import sys
 
 ''' train.py commandline program
     Basic Usage: 
@@ -9,27 +10,45 @@ import argparse
 
     Choose Architecture:
     python train.py data_dir --arch "vgg16"
+    python train.py data_dir --arch "alexnet"
 
     Set Hyperparameters
     python train.py data_dir --learning_rate 0.01 --hidden_units 512 --epochs 5
 
-    GPU will be used automatically if available.
+    GPU will be used automatically if available, or --gpu / --cpu options will choose the sepcific processing type.
 '''
 def main():
     # Create Parse using ArgumentParser
     parser = argparse.ArgumentParser()
-    parser.add_argument('data_dir', type=str, default='./flowers', help='data folder organized by train, valid, test subfolders')
-    parser.add_argument('--cat_to_name', type=str, default='./cat_to_name.json', help='path to json file with category to name mappings')
-    parser.add_argument('--save_dir', type=str, default=None, help='path to folder where our checkpoint files is saved')
-    parser.add_argument('--arch', type=str, default='vgg16', choices=['vgg16', 'vgg19'], help='CNN model architecture to use')
-    parser.add_argument('--classifier', type=str, default='vgg_inspired_short', choices=['vgg_inspired_short', 'vgg_inspired_long'], help='Classifier architecture to apply to outputs of selected pretrained architecture')
-    parser.add_argument('--num_classes', type=int, default='102', help='Set the number of classes expected for the training dataset')
-    parser.add_argument('--optimizer', type=str, default='Adam', choices=['Adam'], help='Select the preferred optimizer algorithm for the model')
-    parser.add_argument('--learning_rate', type=float, default=0.001, help='learning rate for the optimizer')
-    parser.add_argument('--criterion', type=str, default='NLLLoss', choices=['NLLLoss'], help='Set the preferred criterion algorithm')
-    parser.add_argument('--hidden_units', type=int, default=512, help='number of hidden units')
-    parser.add_argument('--epochs', type=int, default=1, help='number of epochs to use during training')
-    parser.add_argument('--print_every', type=int, default=5, help='how often to print out accuracy metrics during training')
+    parser.add_argument('data_dir', type=str, default='./flowers', 
+                        help='data folder organized by train, valid, test subfolders')
+    parser.add_argument('--cat_to_name', type=str, default='./cat_to_name.json', 
+                        help='path to json file with category to name mappings')
+    parser.add_argument('--save_dir', type=str, default=None, 
+                        help='path to folder where our checkpoint files is saved')
+    parser.add_argument('--arch', type=str, default='vgg16', choices=['vgg16', 'vgg19', 'alexnet', 'densenet121'], 
+                        help='CNN model architecture to use')
+    parser.add_argument('--classifier', type=str, default='vgg_inspired_short', choices=['vgg_inspired_short', 'vgg_inspired_long'], 
+                        help='Classifier architecture to apply to outputs of selected pretrained architecture')
+    parser.add_argument('--num_classes', type=int, default='102', 
+                        help='Set the number of classes expected for the training dataset')
+    parser.add_argument('--optimizer', type=str, default='Adam', choices=['Adam', 'SGD'], 
+                        help='Select the preferred optimizer algorithm for the model')
+    parser.add_argument('--learning_rate', type=float, default=0.001, 
+                        help='learning rate for the optimizer')
+    parser.add_argument('--criterion', type=str, default='NLLLoss', choices=['NLLLoss', 'CrossEntropyLoss'], 
+                        help='Set the preferred criterion algorithm')
+    parser.add_argument('--hidden_units', type=int, default=512, 
+                        help='number of hidden units')
+    parser.add_argument('--epochs', type=int, default=1, 
+                        help='number of epochs to use during training')
+    parser.add_argument('--print_every', type=int, default=5, 
+                        help='how often to print out accuracy metrics during training')
+    parser.add_argument('--gpu', action='store_true',
+                    help='use GPU for training and validation, only supports GPUs with CUDA, cannot be specified with --cpu')
+    parser.add_argument('--cpu', action='store_true', 
+                    help='use CPU for training and validation, cannot be specified with --gpu')
+    
 
     in_arg = parser.parse_args()
 
@@ -44,6 +63,14 @@ def main():
     criterion_id = in_arg.criterion
     hidden_units = in_arg.hidden_units
     epochs = in_arg.epochs
+    cpu = in_arg.cpu
+    gpu = in_arg.gpu
+
+    if cpu and gpu:
+        print('Cannot specify both --cpu and --gpu')
+        sys.exit(1)
+    
+    device_name = 'cpu' if cpu else 'cuda' if gpu else None
 
     # create data loaders to access the features and category metadata
     dataloaders = produce_data_loaders(data_dir)
@@ -62,6 +89,7 @@ def main():
         optimizer=optimizer,
         criterion=criterion,
         epochs=epochs,
+        device_name=device_name
     )
 
     # if save_dir option was specified

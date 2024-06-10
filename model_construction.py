@@ -5,6 +5,9 @@ from torchvision import models
 from collections import OrderedDict
 import json
 
+vgg_class_input = 25088
+alexnet_class_input = 9216
+densenet_class_input = 1024
 
 def produce_pretrained_model(model_id, freeze_base_model=True):
     ''' Produce a pretrained model for the given model_id
@@ -15,10 +18,18 @@ def produce_pretrained_model(model_id, freeze_base_model=True):
         freeze_base_model: when true we set requireds_grad=False for the pretrained model layers.
     '''
     model_instance = None
-    if (model_id == 'vgg16'):
-        model_instance = models.vgg16(pretrained=True)
-    if (model_id == 'vgg19'):
-        model_instance = models.vgg19(pretrained=True)
+    if model_id == 'vgg16':
+        model_instance = models.vgg16(weights=models.vgg.VGG16_Weights.DEFAULT)
+        model_instance.input_count = vgg_class_input
+    if model_id == 'vgg19':
+        model_instance = models.vgg19(weights=models.vgg.VGG19_Weights.DEFAULT)
+        model_instance.input_count = vgg_class_input
+    if model_id == 'alexnet':
+        model_instance = models.alexnet(weights=models.AlexNet_Weights.DEFAULT)
+        model_instance.input_count = alexnet_class_input
+    if model_id == 'densenet121':
+        model_instance = models.densenet121(weights=models.DenseNet121_Weights.DEFAULT)
+        model_instance.input_count = densenet_class_input
     
     if model_instance:
         if freeze_base_model:
@@ -31,7 +42,7 @@ def produce_pretrained_model(model_id, freeze_base_model=True):
     raise Exception(f"Usupported model identifier: {model_id}")
 
 
-def produce_classifier(classifier_id, output_count=102, input_count=25088):
+def produce_classifier(classifier_id, output_count=102, input_count=512):
     ''' Produce identified instance of Sequential defining the layer architecture for the classifier
         
         Arguments
@@ -80,6 +91,8 @@ def produce_optimizer(optimizer_id, classifier, learnrate=0.001):
     optimizer_instance = None
     if optimizer_id == 'Adam':
         optimizer_instance = optim.Adam(classifier.parameters(), lr=learnrate)
+    if optimizer_id == 'SGD':
+        optimizer_instance = optim.SGD(classifier.parameters(), lr=learnrate)
     
     if optimizer_instance:
         optimizer_instance.optimizer_id = optimizer_id
@@ -95,6 +108,8 @@ def produce_criterion(criterion_id):
     criterion_instance = None
     if criterion_id == 'NLLLoss':
         criterion_instance = nn.NLLLoss()
+    if criterion_id == 'CrossEntropyLoss':
+        criterion_instance = nn.CrossEntropyLoss()
     
     if criterion_instance:
         criterion_instance.criterion_id = criterion_id 
@@ -106,7 +121,7 @@ def produce_criterion(criterion_id):
 def construct_model_from_parameters(model_id, classifier_id=None, num_classes=102):
     model = produce_pretrained_model(model_id)
     if classifier_id:
-        model.classifier = produce_classifier(classifier_id, output_count=num_classes)
+        model.classifier = produce_classifier(classifier_id, output_count=num_classes, input_count=model.input_count)
     
     return model
 

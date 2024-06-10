@@ -85,4 +85,13 @@ def predict(image_path, model, category_names, device_name=None, topk=5):
     top_values, top_indices = torch.topk(ps, k=topk)
     top_names = [category_names[str(idx)] for idx in top_indices[0].tolist()]
 
-    return zip(top_indices[0].tolist(), top_names, top_values[0].tolist())   
+    return zip(top_indices[0].tolist(), top_names, top_values[0].tolist())
+
+
+def print_predictions(predictions, title=None):
+    if title:
+        print(f"{title}\n")
+    print(f"{'Cat':>4} {'Name':<30} {'Probability'}")
+    for category, name, probability in predictions:
+        print(f"{category:>4} {name:<30} {probability*100:.3}%")
+    print()
