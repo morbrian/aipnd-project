@@ -1,6 +1,68 @@
 # AI Programming with Python Project
 
-Project code for Udacity's AI Programming with Python Nanodegree program. In this project, students first develop code for an image classifier built with PyTorch, then convert it into a command line application.
+Notes about code organization.
+
+1. train.py - commandline application for training a network.
+1. predict.py - commandline application for predicting a category for an input image.
+1. feature_loading.py - utilities for loading data features.
+1. model_construction.py - utilities for saving and restoring a model checkpoint.
+1. model_training.py - primary controller for how the network gets trained.
+1. model_evaluation.py - functions for evaluating model performance and predicting image categories.
+
+## Staging Data
+
+This projected used the provided Flowers data set, and sample commandlines assume this is extracted to a `./flowers` subfolder.
+* Downloadable here: [Download Flowers Dataset](https://s3.amazonaws.com/content.udacity-data.com/nd089/flower_data.tar.gz)
+
+## Train
+
+* Basic Usage: `python train.py ./flowers`
+
+* Set directory to save checkpoints: 
+    ```
+    mkdir custom
+    python train.py data_dir --save_dir ./custom
+    ```
+
+* Choose architecture: `python train.py ./flowers --arch "vgg13"`
+
+* Set hyperparameters: `python train.py ./flowers --learning_rate 0.01 --hidden_units 512 --epochs 20`
+
+* Use GPU for training: `python train.py data_dir --gpu`
+    * Note that `gpu` is used by default when available even without this option.
+    * Can also specify `--cpu` to downgrade to using only cpu.
+
+### Extended Training Options
+
+* Print architecture before Training: `python train.py ./flowers --print_arch`
+
+* Select altnerate optimizer and loss functions: `python train.py ./flowers --criterion CrossEntropyLoss --optimizer SGD`
+
+* Specify prepared classifier by identifier: python train.py ./flowers --classifier vgg_inspired_short
+
+* Specify category names file, it will be saved with checkpoint: `python train.py ./flowers --save_dir . --cat_to_name cat_to_name.json`
+
+## Predict
+
+* Basic usage: `python predict.py ./flowers/test/26/image_06526.jpg checkpoint.pth`
+
+* Return top K most likely classes: `python predict.py ./flowers/test/26/image_06526.jpg checkpoint.pth --top_k 3`
+
+* Use a mapping of categories to real names: `python predict.py ./flowers/test/26/image_06526.jpg checkpoint.pth --category_names cat_to_name.json`
+    * Note that the default mapping was also saved to the checkpoint file during training.
+    * Specifying --category_names on prediction will override the mapping stored in the checkpoint.
+
+* Use GPU for inference: `python predict.py ./flowers/test/26/image_06526.jpg checkpoint.pth --gpu`
+    * Note that `gpu` is used by default when available even without this option.
+    * Can also specify `--cpu` to downgrade to using only cpu.
+
+### Extended Prediction Options
+
+* Print architecture loaded from checkpoint before prediction: `python predict.py ./flowers/test/26/image_06526.jpg checkpoint.pth --print_arch`
+
+# Appendices
+
+Additional notes about getting an environment setup.
 
 ## Local Configuration
 

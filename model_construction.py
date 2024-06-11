@@ -18,6 +18,9 @@ def produce_pretrained_model(model_id, freeze_base_model=True):
         freeze_base_model: when true we set requireds_grad=False for the pretrained model layers.
     '''
     model_instance = None
+    if model_id == 'vgg13':
+        model_instance = models.vgg13(weights=models.vgg.VGG13_Weights.DEFAULT)
+        model_instance.input_count = vgg_class_input
     if model_id == 'vgg16':
         model_instance = models.vgg16(weights=models.vgg.VGG16_Weights.DEFAULT)
         model_instance.input_count = vgg_class_input

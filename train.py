@@ -26,7 +26,7 @@ def main():
                         help='path to json file with category to name mappings')
     parser.add_argument('--save_dir', type=str, default=None, 
                         help='path to folder where our checkpoint files is saved')
-    parser.add_argument('--arch', type=str, default='vgg16', choices=['vgg16', 'vgg19', 'alexnet', 'densenet121'], 
+    parser.add_argument('--arch', type=str, default='vgg16', choices=['vgg13', 'vgg16', 'vgg19', 'alexnet', 'densenet121'], 
                         help='CNN model architecture to use')
     parser.add_argument('--classifier', type=str, default='custom', choices=['vgg_inspired_short', 'vgg_inspired_long', 'custom'], 
                         help='Classifier architecture to apply to outputs of selected pretrained architecture')
