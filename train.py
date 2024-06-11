@@ -28,7 +28,7 @@ def main():
                         help='path to folder where our checkpoint files is saved')
     parser.add_argument('--arch', type=str, default='vgg16', choices=['vgg16', 'vgg19', 'alexnet', 'densenet121'], 
                         help='CNN model architecture to use')
-    parser.add_argument('--classifier', type=str, default='vgg_inspired_short', choices=['vgg_inspired_short', 'vgg_inspired_long'], 
+    parser.add_argument('--classifier', type=str, default='custom', choices=['vgg_inspired_short', 'vgg_inspired_long', 'custom'], 
                         help='Classifier architecture to apply to outputs of selected pretrained architecture')
     parser.add_argument('--num_classes', type=int, default='102', 
                         help='Set the number of classes expected for the training dataset')
@@ -38,8 +38,6 @@ def main():
                         help='learning rate for the optimizer')
     parser.add_argument('--criterion', type=str, default='NLLLoss', choices=['NLLLoss', 'CrossEntropyLoss'], 
                         help='Set the preferred criterion algorithm')
-    parser.add_argument('--hidden_units', type=int, default=512, 
-                        help='number of hidden units')
     parser.add_argument('--epochs', type=int, default=1, 
                         help='number of epochs to use during training')
     parser.add_argument('--print_every', type=int, default=5, 
@@ -48,6 +46,10 @@ def main():
                     help='use GPU for training and validation, only supports GPUs with CUDA, cannot be specified with --cpu')
     parser.add_argument('--cpu', action='store_true', 
                     help='use CPU for training and validation, cannot be specified with --gpu')
+    parser.add_argument('--print_arch', action='store_true', 
+                    help='Display the model architecture before training.')
+    parser.add_argument('--hidden_units', type=int, nargs='+', default=[512], 
+                        help='List of hidden units for each hidden layer')
     
 
     in_arg = parser.parse_args()
@@ -65,6 +67,7 @@ def main():
     epochs = in_arg.epochs
     cpu = in_arg.cpu
     gpu = in_arg.gpu
+    print_arch = in_arg.print_arch
 
     if cpu and gpu:
         print('Cannot specify both --cpu and --gpu')
@@ -77,9 +80,17 @@ def main():
     category_to_name_map = get_category_to_name_map(cat_to_name_file)
 
     # construct the model, optimizer, criterion specified by commandline parameters
-    model = construct_model_from_parameters(model_id, classifier_id, num_classes)
+    model = construct_model_from_parameters(model_id, classifier_id, num_classes, hidden_units)
     optimizer = produce_optimizer(optimizer_id, model.classifier, learnrate=learnrate)
     criterion = produce_criterion(criterion_id)
+
+    if print_arch:
+        print('__Model')
+        print(model)
+        print('__Optimizer')
+        print(optimizer)
+        print('__Criterion')
+        print(criterion)
 
     # train the model
     train_model( 

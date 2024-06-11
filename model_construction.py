@@ -30,7 +30,7 @@ def produce_pretrained_model(model_id, freeze_base_model=True):
     if model_id == 'densenet121':
         model_instance = models.densenet121(weights=models.DenseNet121_Weights.DEFAULT)
         model_instance.input_count = densenet_class_input
-    
+
     if model_instance:
         if freeze_base_model:
             # Freeze parameters so we don't backprop through them
@@ -42,7 +42,7 @@ def produce_pretrained_model(model_id, freeze_base_model=True):
     raise Exception(f"Usupported model identifier: {model_id}")
 
 
-def produce_classifier(classifier_id, output_count=102, input_count=512):
+def produce_classifier(classifier_id, output_count=102, input_count=512, hidden_units=[]):
     ''' Produce identified instance of Sequential defining the layer architecture for the classifier
         
         Arguments
@@ -74,11 +74,27 @@ def produce_classifier(classifier_id, output_count=102, input_count=512):
             ('fc5', nn.Linear(1024, output_count)),
             ('output', nn.LogSoftmax(dim=1))
         ]))
-    
+    if classifier_id == 'custom':
+        # this loop handler for multiple hidden_units is from udacity gpt
+        layers = []
+        in_features = input_count
+        for units in hidden_units:
+            layers.append(nn.Linear(in_features, units))
+            layers.append(nn.ReLU())
+            layers.append(nn.Dropout(p=0.2))
+            in_features = units
+        layers.append(nn.Linear(in_features, output_count))
+        layers.append(nn.LogSoftmax(dim=1))
+        classifier_instance = nn.Sequential(*layers)
+        classifier_instance.input_count = input_count
+        classifier_instance.hidden_units = hidden_units
+        classifier_instance.output_count = output_count
+
     if classifier_instance:
         classifier_instance.classifier_id = classifier_id
         classifier_instance.output_count = output_count
         classifier_instance.input_count = input_count
+        classifier_instance.hidden_units = hidden_units
         return classifier_instance
 
     raise Exception(f"No classifier matches id {classifier_id}")
@@ -118,10 +134,10 @@ def produce_criterion(criterion_id):
     raise Exception(f"Unsupported criterion request {criterion_id}")
 
 
-def construct_model_from_parameters(model_id, classifier_id=None, num_classes=102):
+def construct_model_from_parameters(model_id, classifier_id=None, num_classes=102, hidden_units=[]):
     model = produce_pretrained_model(model_id)
     if classifier_id:
-        model.classifier = produce_classifier(classifier_id, output_count=num_classes, input_count=model.input_count)
+        model.classifier = produce_classifier(classifier_id, output_count=num_classes, input_count=model.input_count, hidden_units=hidden_units)
     
     return model
 
@@ -147,6 +163,7 @@ def save_model(model, filename, class_to_name=None, train_data=None, optimizer=N
         'classifier_id': model.classifier.classifier_id,
         'output_count': model.classifier.output_count,
         'input_count': model.classifier.input_count,
+        'hidden_units': model.classifier.hidden_units,
         'state_dict': model.state_dict(),
         'integrity_check': str(model),
         'data_mapping_metadata': {
@@ -163,6 +180,7 @@ def save_model(model, filename, class_to_name=None, train_data=None, optimizer=N
         }
     }
     torch.save(checkpoint, filename)
+    print(f"Model saved to {filename}")
 
 
 def load_model_bundle(filepath):
@@ -196,7 +214,8 @@ def load_model_bundle(filepath):
     classifier_id = checkpoint['classifier_id']
     output_count = checkpoint['output_count']
     input_count = checkpoint['input_count']
-    base_model.classifier = produce_classifier(classifier_id, output_count=output_count, input_count=input_count)
+    hidden_units = checkpoint['hidden_units']
+    base_model.classifier = produce_classifier(classifier_id, output_count=output_count, input_count=input_count, hidden_units=hidden_units)
     base_model.load_state_dict(checkpoint['state_dict'])
     # verify the archtitecture we loaded matches what we saved
     integrity_check = checkpoint['integrity_check']

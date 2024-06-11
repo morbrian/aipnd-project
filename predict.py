@@ -33,15 +33,18 @@ def main():
                         help='use GPU for training and validation, only supports GPUs with CUDA, cannot be specified with --cpu')
     parser.add_argument('--cpu', action='store_true', 
                         help='use CPU for training and validation, cannot be specified with --gpu')
+    parser.add_argument('--print_arch', action='store_true', 
+                        help='Display the model architecture before prediction.')
 
     in_arg = parser.parse_args()
 
     imagefile = in_arg.imagefile
     checkpoint = in_arg.checkpoint
     top_k = in_arg.top_k
-    category_names = get_category_to_name_map(in_arg.category_names)
+    category_names = get_category_to_name_map(in_arg.category_names) if in_arg.category_names else None
     cpu = in_arg.cpu
     gpu = in_arg.gpu
+    print_arch = in_arg.print_arch
     
     if cpu and gpu:
         print('Cannot specify both --cpu and --gpu')
@@ -51,6 +54,10 @@ def main():
     bundle = load_model_bundle(checkpoint)
     model = bundle['model']
     cat_to_name = category_names or bundle['class_to_name']
+
+    if print_arch:
+        print('__Model')
+        print(model)
 
     top_predictions = list(predict(image_path=imagefile, model=model, category_names=cat_to_name, topk=top_k, device_name=device_name))
 
