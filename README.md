@@ -1,5 +1,19 @@
 # AI Programming with Python Project
 
+## Part-1: Jupyter Notebook
+
+The notebook is the file `Image Classifier Project.ipynb`
+
+The HTML export of the notbook after running all cells is: 
+* [Image_Classifier_Project.html](Image_Classifier_Project.html)
+
+Note that the checkpoint format saved by the notebook is not compatible with the commandline application.
+* Notebook saves file as `checkpoint-nb.pth` to avoid overwriting the CLI saved checkpoints.
+* The CLI app format evolved beyond the Jupyter code snippets and the two formats diverged.
+
+
+## Part-2: Commandline Application
+
 Notes about code organization.
 
 1. train.py - commandline application for training a network.
